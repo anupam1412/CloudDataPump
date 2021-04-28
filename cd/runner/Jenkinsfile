@@ -1,0 +1,91 @@
+pipeline {
+    agent any
+
+    stages {
+
+		        stage ('start-dataflow'){
+
+		                    agent {
+                                docker { image 'google/cloud-sdk:latest'
+                						args '-v /tmp/:/tmp/ '
+                						args '-u root'
+                						}
+                            }
+
+
+
+
+            steps{
+
+                script{
+
+		 env.DF_TEMPLATE = input(id: 'userInput', message: 'Dataflow template',
+             parameters: [[$class: 'ChoiceParameterDefinition', defaultValue: 'csv-batch', 
+                description:'Dataflow template selection', name:'dftemplate', choices: 'csv-batch\navro-batch\njson-stream\nxml-stream']
+             ])
+
+             echo "dfTemplate groovy => "+DF_TEMPLATE
+				sh '''
+					export DEVSHELL_PROJECT_ID='project-mohemed2087'
+					export GOOGLE_APPLICATION_CREDENTIALS=/tmp/project-mohemed2087-ef6a63d68d2f.json
+                    gcloud auth activate-service-account jenkins-svc@project-mohemed2087.iam.gserviceaccount.com --key-file=/tmp/project-mohemed2087-ef6a63d68d2f.json
+                        echo "dfTemplate shell ${DF_TEMPLATE}"
+
+                            if [ ${DF_TEMPLATE} = 'csv-batch' ]
+                            then
+                                                    echo "Starting csv-batch pipeline....."
+
+                                  				    gcloud dataflow jobs run data-pump-csv-batch \
+                                                    --project=$DEVSHELL_PROJECT_ID \
+                                                    --gcs-location=gs://${DEVSHELL_PROJECT_ID}/templates/batch/csv/cloud-data-pump.json  \
+                                                    --region=europe-west1 \
+                                                    --parameters config=gs://${DEVSHELL_PROJECT_ID}/confs/csv-batch-template.conf,filePath=gs://$DEVSHELL_PROJECT_ID/csv/appointments/appointments.csv,ingestionMode=csv_batch
+
+                            elif [ ${DF_TEMPLATE} = 'avro-batch' ]
+                            then
+                                                     echo "Starting avro-batch pipeline....."
+
+                                   				    gcloud dataflow jobs run data-pump-avro-batch \
+                                                     --project=$DEVSHELL_PROJECT_ID \
+                                                     --gcs-location=gs://${DEVSHELL_PROJECT_ID}/templates/batch/avro/cloud-data-pump.json  \
+                                                     --region=europe-west1 \
+                                                     --parameters config=gs://${DEVSHELL_PROJECT_ID}/confs/avro-batch-template.conf,filePath=gs://$DEVSHELL_PROJECT_ID/avro/appointments/appointments.avro,ingestionMode=csv_avro
+                             elif [ ${DF_TEMPLATE} = 'json-stream' ]
+                             then
+                                                     echo "Starting json-stream pipeline....."
+
+                                                    gcloud dataflow jobs run data-pump-json-stream \
+                                                        --project=$DEVSHELL_PROJECT_ID \
+                                                        --gcs-location=gs://${DEVSHELL_PROJECT_ID}/templates/stream/json/cloud-data-pump.json \
+                                                        --region=europe-west1 \
+                                                        --parameters config=gs://${DEVSHELL_PROJECT_ID}/confs/json-stream-template.conf,subscription=projects/$DEVSHELL_PROJECT_ID/subscriptions/mysub,ingestionMode=json_stream
+
+
+                            elif [ ${DF_TEMPLATE} = 'xml-stream' ]
+                            then
+                            	echo 'Starting xml-stream pipeline..'
+				gcloud dataflow jobs run data-pump-xml-stream \
+		   		--project=$DEVSHELL_PROJECT_ID \
+          			--gcs-location=gs://${DEVSHELL_PROJECT_ID}/templates/stream/xml/cloud-data-pump.json \
+           			--region=europe-west1 \
+          			--parameters config=gs://${DEVSHELL_PROJECT_ID}/confs/xml-stream-template.conf,subscription=projects/$DEVSHELL_PROJECT_ID/subscriptions/mysub,ingestionMode=xml_stream
+                            fi
+
+
+				'''
+                }
+                }
+
+				            post {
+                success {
+                    echo 'dataflow pipeline started successfully'
+                }
+
+                failure {
+                    echo ' dataflow pipeline start failed'
+                }
+            }
+            }
+
+        }
+    }

@@ -1,0 +1,133 @@
+pipeline {
+    agent any
+        environment {
+            // This can be nexus3 or nexus2
+            NEXUS_VERSION = "nexus2"
+            // This can be http or https
+            NEXUS_PROTOCOL = "http"
+            // Where your Nexus is running
+            NEXUS_URL = "192.168.161.128/:8081/nexus"
+            // Repository where we will upload the artifact
+            NEXUS_REPOSITORY = ""
+            // Jenkins credential id to authenticate to Nexus OSS
+            NEXUS_CREDENTIAL_ID = "nexus3"
+            // project id
+            DEVSHELL_PROJECT_ID = "project-mohemed2087"
+        }
+    stages {
+
+        stage('Build') {
+        steps{
+        script{
+                              if(env.GIT_BRANCH.contains("feature/"))
+                                   NEXUS_REPOSITORY = "maven-features"
+                              else if(env.GIT_BRANCH.contains("develop"))
+                                   NEXUS_REPOSITORY = "maven-snapshots"
+                               else if(env.GIT_BRANCH.contains("master"))
+                                    NEXUS_REPOSITORY = "maven-releases"
+    def common
+    common = load "scripts/common.groovy"
+    String pack = input message: 'Select the artifact', parameters: [[$class: 'ExtensibleChoiceParameterDefinition', choiceListProvider: [$class: 'Nexus3ChoiceListProvider', artifactId: 'cloud-data-pump', classifier: '', credentialsId: 'nexus3', groupId: 'com.accenture.datastudio', packaging: 'jar', repositoryId: NEXUS_REPOSITORY, reverseOrder: true, url: 'http://192.168.161.128:8081'], description: '', editable: false, name: 'package']]
+    echo pack
+    echo NEXUS_REPOSITORY
+    artPath = common.downloadArtifact(NEXUS_REPOSITORY,'cloud-data-pump',pack)
+    env.DEVSHELL_PROJECT_ID = "project-mohemed2087"
+    env.ART_PATH = artPath
+    env.JAR = common.getJarName(artPath)
+    echo "Download URL => ${ART_PATH}"
+    echo "JAR name => ${JAR}"
+				}
+				}
+        }
+	stage("deploy-dataflow") {
+
+            agent {
+                docker { image 'google/cloud-sdk:latest'
+						args '-v /tmp/:/tmp/ '
+						args '-u root'
+						}
+            }
+
+		steps{
+                                    echo "creating and deploy dataflow template.."
+
+        								sh  '''
+        								    mkdir -p /tmp/jenkins_tmp
+                                            cd /tmp/jenkins_tmp
+                                            curl -o $JAR \"${ART_PATH}\"
+                                            cd -
+
+        								export GOOGLE_APPLICATION_CREDENTIALS=/tmp/project-mohemed2087-ef6a63d68d2f.json
+
+                    					        gcloud auth activate-service-account jenkins-svc@project-mohemed2087.iam.gserviceaccount.com --key-file=/tmp/project-mohemed2087-ef6a63d68d2f.json
+                    					         gsutil cp dataflow-conf/* gs://$DEVSHELL_PROJECT_ID/confs/
+
+                                                 echo "creating xml-stream template...."
+
+                     					        java  -jar /tmp/jenkins_tmp/${JAR} \
+                                                         --project=$DEVSHELL_PROJECT_ID \
+                                                         --stagingLocation=gs://${DEVSHELL_PROJECT_ID}/staging/stream/xml \
+                                                         --tempLocation=gs://${DEVSHELL_PROJECT_ID}/temp --runner=DataflowRunner \
+                                                         --templateLocation=gs://${DEVSHELL_PROJECT_ID}/templates/stream/xml/cloud-data-pump.json \
+                                                         --workerMachineType=n1-standard-1 \
+                                                         --numWorkers=1 \
+                                                         --ingestionMode=xml_stream
+
+                    					         echo "creating csv-batch template..."
+
+                    					        java  -jar /tmp/jenkins_tmp/${JAR} \
+                                                      --project=$DEVSHELL_PROJECT_ID \
+                                                      --stagingLocation=gs://${DEVSHELL_PROJECT_ID}/staging/batch/csv \
+                                                      --tempLocation=gs://${DEVSHELL_PROJECT_ID}/temp --runner=DataflowRunner \
+                                                      --templateLocation=gs://${DEVSHELL_PROJECT_ID}/templates/batch/csv/cloud-data-pump.json \
+                                                      --workerMachineType=n1-standard-1 \
+                                                      --numWorkers=1 \
+                                                      --ingestionMode=csv_batch
+
+                                                      echo "creating avro-batch template...."
+
+                    					        java  -jar /tmp/jenkins_tmp/${JAR} \
+                                                        --project=$DEVSHELL_PROJECT_ID \
+                                                        --stagingLocation=gs://${DEVSHELL_PROJECT_ID}/staging/batch/avro \
+                                                        --tempLocation=gs://${DEVSHELL_PROJECT_ID}/temp --runner=DataflowRunner \
+                                                        --templateLocation=gs://${DEVSHELL_PROJECT_ID}/templates/batch/avro/cloud-data-pump.json \
+                                                        --workerMachineType=n1-standard-1 \
+                                                        --numWorkers=1 \
+                                                        --ingestionMode=avro_batch
+
+                                                        echo "creating json-stream template...."
+
+                    					        java  -jar /tmp/jenkins_tmp/${JAR} \
+                                                        --project=$DEVSHELL_PROJECT_ID \
+                                                        --stagingLocation=gs://${DEVSHELL_PROJECT_ID}/staging/stream/json \
+                                                        --tempLocation=gs://${DEVSHELL_PROJECT_ID}/temp --runner=DataflowRunner \
+                                                        --templateLocation=gs://${DEVSHELL_PROJECT_ID}/templates/stream/json/cloud-data-pump.json \
+                                                        --workerMachineType=n1-standard-1 \
+                                                        --numWorkers=1 \
+                                                        --ingestionMode=json_stream
+
+        										rm -rf /tmp/jenkins_tmp
+                    					  '''
+
+}
+
+							            post {
+                success {
+                    echo 'deployment successful..'
+
+					timeout(time:5, unit:'DAYS'){
+                    input message:'Do you want to start the pipeline..?'
+					build(job: 'cloud-data-pump-runner')
+
+                }
+				}
+
+                failure {
+                    echo ' dataflow pipeline start failed'
+                }
+            }
+
+
+    }
+}
+}

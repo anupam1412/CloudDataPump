@@ -1,0 +1,13 @@
+{
+  "Type":"AppointmentBooked",
+  "Data":[
+    {
+      "AppointmentId":"6c1dadd8-a71a-457a-a8d1-570033a5931a",
+      "TimestampUtc":"2017-06-17:09:37Z",
+      "Disciplines":[
+        "Physio",
+        "Cardio"
+      ]
+    }
+    ]
+    }

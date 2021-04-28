@@ -1,0 +1,38 @@
+{
+  "Type":"AppointmentBooked",
+  "Data":[
+    {
+      "AppointmentId":"6c1dadd8-a71a-457a-a8d1-570033a5931a",
+      "TimestampUtc":"2017-06-17 09:37.34",
+      "Disciplines":[
+        "Physio",
+        "Cardio"
+      ]
+    },
+    {
+      "AppointmentId":"6163d5fc-436f-4bd5-ad36-0e4a54ad49e0",
+      "TimestampUtc":"2018-05-22 12:37.45",
+      "Disciplines":[
+        "Physio",
+        "Ortho"
+      ]
+    },
+    {
+      "AppointmentId":"c2576937-c741-466d-927a-bdcee0232f9f",
+      "TimestampUtc":"2018-11-03 12:37.46",
+      "Disciplines":[
+        "Physio",
+        "Dental"
+      ]
+    },
+    {
+      "AppointmentId":"76bd9165-bb01-4a48-85cc-55f2700fdd32",
+      "TimestampUtc":"2017-05-14T22 12:37.57",
+      "Disciplines":[
+        "Physio",
+        "Ortho",
+        "Neuro"
+      ]
+    }
+  ]
+}

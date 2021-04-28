@@ -1,0 +1,19 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('build') {
+            steps {
+            script{
+           def pack = input message: 'Select the artifact', parameters: [[$class: 'ExtensibleChoiceParameterDefinition', choiceListProvider: [$class: 'Nexus3ChoiceListProvider', artifactId: 'cloud-data-pump', classifier: '', credentialsId: '601d07fa-c482-4159-abd9-3fd70e71dd11', groupId: 'com.accenture.datastudio', packaging: 'jar', repositoryId: '', reverseOrder: true, url: 'http://192.168.161.131:8081'], description: '', editable: false, name: 'package']]
+
+                echo "sfaf $pack "
+                      // echo ${package}
+                }
+
+               // build job: 'cloud-data-pump-cd-mb/'+branch,  parameters: [[$class: 'ExtensibleChoiceParameterDefinition', choiceListProvider: [$class: 'Nexus3ChoiceListProvider', artifactId: 'cloud-data-pump', classifier: '', credentialsId: '601d07fa-c482-4159-abd9-3fd70e71dd11', groupId: 'com.accenture.datastudio', packaging: 'jar', repositoryId: '', reverseOrder: true, url: 'http://192.168.161.131:8081'], description: '', editable: false, name: 'Pack']]
+            }
+
+        }
+    }
+}

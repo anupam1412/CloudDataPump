@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    stages {
+
+		stage ('create-infra-objects'){
+		                    agent {
+                                docker { image 'google/cloud-sdk:latest'
+                						args '-v /tmp/:/tmp/ '
+                						args '-u root'
+                						}
+                            }
+            steps{
+
+					sh '''
+						export DEVSHELL_PROJECT_ID='project-mohemed2087'
+						export GOOGLE_APPLICATION_CREDENTIALS=/tmp/project-mohemed2087-ef6a63d68d2f.json
+						gcloud auth activate-service-account jenkins-svc@project-mohemed2087.iam.gserviceaccount.com --key-file=/tmp/project-mohemed2087-ef6a63d68d2f.json
+						gcloud pubsub topics create  projects/project-mohemed2087/topics/appointments
+						gcloud pubsub subscriptions create projects/project-mohemed2087/subscriptions/mysub --topic projects/project-mohemed2087/topics/appointments --topic-project $DEVSHELL_PROJECT_ID
+						bq mk --dataset $DEVSHELL_PROJECT_ID:events
+						bq mk  --schema schema/bq_stream_schema_appointments.json --table $DEVSHELL_PROJECT_ID:events.stream_appointments
+						bq mk  --schema schema/bq_batch_schema_appointments.json --table $DEVSHELL_PROJECT_ID:events.batch_appointments
+						gsutil mb -p $DEVSHELL_PROJECT_ID  gs://$DEVSHELL_PROJECT_ID
+						gsutil cp src/test/resources/data/batch/csv/appointments.csv gs://$DEVSHELL_PROJECT_ID/csv/appointments/
+						gsutil cp src/test/resources/data/batch/avro/appointments.avro gs://$DEVSHELL_PROJECT_ID/avro/appointments/
+
+
+						echo "All objects created successfully...."
+					'''
+
+                }
+
+            }
+
+        }
+    }

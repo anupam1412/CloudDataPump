@@ -1,0 +1,6 @@
+github:latest
+groovy:latest
+nexus-artifact-uploader:latest
+pipeline-utility-steps:latest
+nexus-jenkins-plugin:latest
+maven-artifact-choicelistprovider:latest

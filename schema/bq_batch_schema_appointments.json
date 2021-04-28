@@ -1,0 +1,31 @@
+[
+  {
+    "name":"Type",
+    "type":"STRING"
+  },
+  {
+    "name":"AppointmentId",
+    "type":"STRING"
+  },
+  {
+    "name":"TimestampUtc",
+    "type":"STRING"
+  },
+  {
+    "name":"Discipline",
+    "type":"STRING"
+  },
+  {
+    "name":"bq_row_id",
+    "type":"STRING"
+  },
+  {
+    "name":"bq_row_src",
+    "type":"STRING"
+  },
+  {
+    "name":"bq_load_dttm",
+    "type":"TIMESTAMP",
+    "mode":"NULLABLE"
+  }
+]

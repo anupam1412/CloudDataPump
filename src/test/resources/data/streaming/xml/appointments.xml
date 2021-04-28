@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Appointments>
+    <Type>AppointmentBooked</Type>
+    <Data>
+        <AppointmentId>6c1dadd8-a71a-457a-a8d1-570033a5931a</AppointmentId>
+        <TimestampUtc>str1234</TimestampUtc>
+        <Discipline>physio</Discipline>
+    </Data>
+</Appointments>

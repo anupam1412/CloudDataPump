@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    stages {
+
+		        stage ('deploy'){
+            steps{
+                timeout(time:5, unit:'DAYS'){
+                    input message:'Approve for Deployment?'
+                       script{
+                              branch = env.GIT_BRANCH.replace("/","%2F")
+                              commit = env.GIT_COMMIT
+                             }
+                }
+
+                //build(job: 'cloud-data-pump-cd-mb/'+branch)
+             // build job: 'cloud-data-pump-cd-mb', parameters: [[$class: 'StringParameterValue', name: 'BRANCH_NAME', value: String.valueOf(env.GIT_BRANCH)]]
+            }
+            post {
+                success {
+                echo "branch => "+branch
+            echo "commit =>"+commit
+                    echo 'deployment successful'
+                }
+
+                failure {
+                    echo ' deployment failed.'
+                }
+            }
+        }
+    }
+}

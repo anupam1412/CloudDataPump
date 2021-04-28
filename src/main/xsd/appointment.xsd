@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="domain/appointments"
+        xmlns:tns="domain/appointments"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified">
+
+    <!-- Root Element -->
+    <xs:element name="appointments" type="tns:appointments" />
+
+    <xs:complexType name="appointments">
+        <xs:sequence>
+            <xs:element name = "Type" type ="xs:string"/>
+            <xs:element name = "Data" type = "tns:Data"/>
+            <xs:element name = "TopicName" type ="xs:string"/>
+            <xs:element name = "MessageId" type = "xs:string"/>
+            <xs:element name = "LogicalDate" type = "xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Data">
+
+        <xs:sequence>
+            <xs:element name="AppointmentId" type ="xs:string" minOccurs="0"/>
+            <xs:element name="TimestampUtc" type ="xs:string" minOccurs="0"/>
+            <xs:element name="Discipline" type ="xs:string" minOccurs= "0"/>
+
+        </xs:sequence>
+
+    </xs:complexType>
+</schema>

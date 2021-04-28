@@ -1,0 +1,20 @@
+	pipeline {
+    agent none
+    stages {
+        stage('GCloud') {
+            agent {
+                docker { image 'google/cloud-sdk:alpine'
+						args '-v /tmp/project-mohemed2087-ef6a63d68d2f.json:/tmp/project-mohemed2087-ef6a63d68d2f.json '
+						args '-u root'
+						}
+            }
+            steps {
+            sh '''
+            gcloud auth activate-service-account jenkins-svc@project-mohemed2087.iam.gserviceaccount.com --key-file=/tmp/project-mohemed2087-ef6a63d68d2f.json
+                gcloud --version
+                gsutil ls
+                '''
+            }
+        }
+    }
+}
